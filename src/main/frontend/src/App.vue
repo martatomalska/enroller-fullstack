@@ -48,6 +48,7 @@
             this.$http.post('participants', user)
                     .then(response => {
                       // udało się
+                      this.registering = false;
                       this.created = "Utworzono użytkownika"
                     })
                     .catch(response => {
