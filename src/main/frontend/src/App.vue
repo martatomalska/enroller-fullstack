@@ -11,7 +11,14 @@
       <meetings-page :username="authenticatedUsername"></meetings-page>
     </div>
     <div v-else>
-      <login-form @login="login($event)"></login-form>
+      <button @click="registering = false" :class="registering ? 'button-outline' : ''">Loguję się</button>
+      <button @click="registering = true" :class="registering ? '' : 'button-outline'">Rejestruję się</button>
+
+      <div v-if="error" class="error-alert">{{error}}</div>
+      <div v-if="created" class="user-created">{{created}}</div>
+
+      <login-form @login="login($event)" v-if="registering == false"></login-form>
+      <login-form @login="register($event)" v-else button-label="Zarejestruj się"></login-form>
     </div>
   </div>
 </template>
@@ -25,13 +32,29 @@
         components: {LoginForm, MeetingsPage},
         data() {
             return {
-                authenticatedUsername: ""
+                authenticatedUsername: "",
+                registering: false,
+                error: '',
+                created: ''
             };
         },
         methods: {
             login(user) {
                 this.authenticatedUsername = user.login;
             },
+          register(user) {
+            this.created = '';
+            this.error = '';
+            this.$http.post('participants', user)
+                    .then(response => {
+                      // udało się
+                      this.created = "Utworzono użytkownika"
+                    })
+                    .catch(response => {
+                      // nie udało się
+                      this.error = "Nazwa użytkownika jest zajęta"
+                    });
+          },
             logout() {
                 this.authenticatedUsername = '';
             }
@@ -47,6 +70,21 @@
 
   .logo {
     vertical-align: middle;
+  }
+  .error-alert {
+    border: 3px dotted red;
+    padding: 10px;
+    background: #ffaaaa;
+    text-align: center;
+    border-radius: 5px;
+  }
+
+  .user-created {
+    border: 3px solid #008800;
+    border-radius: 5px;
+    padding: 10px;
+    background: #ddffdd;
+    text-align: center;
   }
 </style>
 
