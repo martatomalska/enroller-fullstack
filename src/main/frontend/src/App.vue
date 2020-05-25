@@ -12,13 +12,9 @@
     </div>
     <div v-else>
       <button @click="registering = false" :class="registering ? 'button-outline' : ''">Loguję się</button>
-      <button @click="registering = true" :class="registering ? '' : 'button-outline'">Rejestruję się</button>
-
-      <div v-if="error" class="error-alert">{{error}}</div>
-      <div v-if="created" class="user-created">{{created}}</div>
-
-      <login-form @login="login($event)" v-if="registering == false"></login-form>
-      <login-form @login="register($event)" v-else button-label="Zarejestruj się"></login-form>
+      <button @click="registering = true" :class="!registering ? 'button-outline' : ''">Rejestruję się</button>
+      <div :class="'alert alert-' + (this.isError ? 'error' : 'success')" v-if="message">{{ message }}</div>
+      <login-form @submit="registering ? register($event) : login($event)" :button-label="loginButtonLabel"></login-form>
     </div>
   </div>
 </template>
@@ -34,36 +30,52 @@
             return {
                 authenticatedUsername: "",
                 registering: false,
-                error: '',
-                created: ''
+                message: '',
+                isError: false
             };
         },
         methods: {
-            login(user) {
-                this.authenticatedUsername = user.login;
-            },
-          register(user) {
-            this.created = '';
-            this.error = '';
-            this.$http.post('participants', user)
-                    .then(response => {
-                      // udało się
-                      this.registering = false;
-                      this.created = "Utworzono użytkownika"
+            register(user) {
+                this.clearMessage();
+                this.$http.post('participants', user)
+                    .then(() => {
+                        this.success('Konto zostało założone. Możesz się zalogować.');
+                        this.registering = false;
                     })
-                    .catch(response => {
-                      // nie udało się
-                      this.error = "Nazwa użytkownika jest zajęta"
-                    });
-          },
+                    .catch(response => this.failure('Błąd przy zakładaniu konta. Kod odpowiedzi: ' + response.status));
+            },
+            login(user) {
+                this.clearMessage();
+                this.$http.post('tokens', user)
+                    .then(() => {
+                        this.authenticatedUsername = user.login;
+                    })
+                    .catch(() => this.failure('Logowanie nieudane.'));
+            },
             logout() {
                 this.authenticatedUsername = '';
+            },
+            success(message) {
+                this.message = message;
+                this.isError = false;
+            },
+            failure(message) {
+                this.message = message;
+                this.isError = true;
+            },
+            clearMessage() {
+                this.message = undefined;
+            }
+        },
+        computed: {
+            loginButtonLabel() {
+                return this.registering ? 'Zarejestruj się' : 'Zaloguj się';
             }
         }
     };
 </script>
 
-<style>
+<style lang="scss">
   #app {
     max-width: 1000px;
     margin: 0 auto;
@@ -72,20 +84,21 @@
   .logo {
     vertical-align: middle;
   }
-  .error-alert {
-    border: 3px dotted red;
+
+  .alert {
     padding: 10px;
-    background: #ffaaaa;
-    text-align: center;
-    border-radius: 5px;
+    margin-bottom: 10px;
+    border: 2px solid black;
+    &-success {
+      background: lightgreen;
+      border-color: darken(lightgreen, 10%);
+    }
+    &-error {
+      background: indianred;
+      border-color: darken(indianred, 10%);
+      color: white;
+    }
   }
 
-  .user-created {
-    border: 3px solid #008800;
-    border-radius: 5px;
-    padding: 10px;
-    background: #ddffdd;
-    text-align: center;
-  }
 </style>
 
