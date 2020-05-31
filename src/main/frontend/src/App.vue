@@ -48,7 +48,7 @@
             login(user) {
                 this.clearMessage();
                 this.$http.post('tokens', user)
-                    .then(() => {
+                    .then(response => {
                       const token = response.body.token;
                       this.storeAuth(user.login, token);
                     })
