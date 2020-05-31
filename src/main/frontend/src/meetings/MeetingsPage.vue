@@ -30,15 +30,15 @@
             };
         },
         mounted() {
-            this.getMeetings();
+            this.$nextTick(this.getMeetings());
         },
         methods: {
             getMeetings() {
-                this.$http.get('meetings').then(response => {this.meetings = response.body;});
+                this.$http.get('meetings').then(response => {this.meetings = response.body;})
             },
             addNewMeeting(meeting) {
-                this.meetings.push(meeting);
                 this.$http.post('meetings', meeting).then(response => {this.meetings.push(response.body);});
+                // this.meetings.push(meeting);
                 this.getMeetings();
 
             },
